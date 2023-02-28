@@ -38,6 +38,10 @@ open("/etc/netplan/99-ron.yaml", "w").write(netplan_config)
 
 os.system("netplan apply")
 
+os.system("apt-get install -y nginx")
+
+open("/var/www/html/index.html", "w").write("<h1>" + hostname + "</h1>")
+
 os.system("apt-get install -y nsd")
 
 nsd_config = """

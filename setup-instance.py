@@ -5,6 +5,7 @@ import os
 
 
 hostname = socket.gethostname()
+# TODO: Read these from the machine rather than rely on a remote server
 ipv4_address = os.popen("curl -4 icanhazip.com").read().strip()
 ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 
@@ -18,14 +19,24 @@ network:
             dhcp6: true
             set-name: enp1s0
             addresses:
-              - "2001:ddb::1/48"
+              - "2001:ddb::1/48":
+                  lifetime: 0
 """
+# The lifetime trick above makes it so that normal traffic (apt, curl) 
+# will use the default non-anycast address by default
+
+netplan_config = netplan_config.replace("$ipv4$", ipv4_address)
+netplan_config = netplan_config.replace("$ipv6$", ipv6_address)
 
 open("/etc/netplan/99-ron.yaml", "w").write(netplan_config)
 
 os.system("netplan apply")
 
+# TODO: Set up NSD, ensure it listens, then continue setting up BIRD
+
 os.system("apt install -y bird")
+
+# TODO: Do the same below for BIRD IPv4
 
 bird6_config = """
 router id $ipv4$;
@@ -42,9 +53,9 @@ filter bgp_out {
     #     bgp_community.add((20473,6000));
     #     accept;
     # }
-	# if net = 2001:ddb::/48 then {
-	#     accept;
-	# }
+    # if net = 2001:ddb::/48 then {
+    #     accept;
+    # }
     reject;
 }
 

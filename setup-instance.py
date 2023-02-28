@@ -40,6 +40,9 @@ open("/etc/netplan/99-ron.yaml", "w").write(netplan_config)
 
 os.system("netplan apply")
 
+# Disable the firewall... This could probably be done cleaner
+os.system("ufw disable")
+
 os.system("apt-get install -y nginx")
 
 open("/var/www/html/index.html", "w").write("<h1>" + hostname + "</h1>")

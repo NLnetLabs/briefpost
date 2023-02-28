@@ -2,6 +2,7 @@
 
 import socket
 import os
+import time
 
 
 hostname = socket.gethostname()
@@ -11,6 +12,7 @@ ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 
 anycast_ip = '${anycast_ip}'
 anycast_prefix = '${anycast_prefix}'
+anycast_ip_absolute = anycast_ip.split("/")[0]
 parent_fqdn = '${parent_fqdn}'
 
 netplan_config = """
@@ -52,7 +54,7 @@ zone:
     name: test.$parent_fqdn$
     zonefile: /etc/nsd/test.$parent_fqdn$.zone
 """
-nsd_config = nsd_config.replace("$anycast_ip_absolute$", anycast_ip.split("/")[0])
+nsd_config = nsd_config.replace("$anycast_ip_absolute$", anycast_ip_absolute)
 nsd_config = nsd_config.replace("$parent_fqdn$", parent_fqdn)
 open("/etc/nsd/nsd.conf.d/99-ron.conf", "w").write(nsd_config)
 
@@ -78,14 +80,19 @@ test.$parent_fqdn$.    IN      SOA      test.$parent_fqdn$. admin.$parent_fqdn$.
 
 """
 nsd_zone = nsd_zone.replace("$parent_fqdn$", parent_fqdn)
-nsd_zone = nsd_zone.replace("$anycast_ip_absolute$", anycast_ip.split("/")[0])
+nsd_zone = nsd_zone.replace("$anycast_ip_absolute$", anycast_ip_absolute)
 nsd_zone = nsd_zone.replace("$hostname$", hostname)
 open("/etc/nsd/test." + parent_fqdn + ".zone", "w").write(nsd_zone)
 
-# TODO: NSD boots up too quickly and fails... Retry later?
-os.system("systemctl restart nsd")
+while True:
+    os.system("systemctl restart nsd")
+    hostname_dns = os.popen(f"dig TXT test.{parent_fqdn} @{anycast_ip_absolute} +short").read().strip()
+    if hostname == hostname_dns.strip("\""):
+        break
+    else:
+        print("NSD not yet started, trying again in 15 seconds...")
+        time.sleep(15)
 
-# TODO: Set up NSD, ensure it listens, then continue setting up BIRD
 
 os.system("apt-get install -y bird")
 

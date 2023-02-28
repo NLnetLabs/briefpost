@@ -1,0 +1,31 @@
+vultr_api_key = ""
+do_api_key = ""
+parent_fqdn = "ron.nlnetlabs.net"
+
+regions = [
+    # "ewr",
+    # "ord",
+    # "dfw",
+    # "sea",
+    # "lax",
+    "atl",
+    "ams",
+    # "lhr",
+    # "fra",
+    # "sjc",
+    # "syd",
+    # "yto",
+    # "cdg",
+    # "nrt",
+    # "waw",
+    # "mad",
+    # "icn",
+    # "mia",
+    # "sgp",
+    # "sto",
+    # "mex",
+    # "mel",
+    # "bom",
+    # "blr",
+    # "itm"
+ ]

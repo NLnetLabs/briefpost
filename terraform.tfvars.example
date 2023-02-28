@@ -4,30 +4,32 @@ parent_fqdn = "ron.nlnetlabs.net"
 anycast_ip = "2001:ddb::1/48"
 anycast_prefix = "2001:ddb::/48"
 
-regions = [
-    # "ewr",
-    # "ord",
-    # "dfw",
-    # "sea",
-    # "lax",
-    "atl",
-    "ams",
-    # "lhr",
-    # "fra",
-    # "sjc",
-    # "syd",
-    # "yto",
-    # "cdg",
-    "nrt",
-    # "waw",
-    # "mad",
-    # "icn",
-    # "mia",
-    # "sgp",
-    # "sto",
-    # "mex",
-    # "mel",
-    # "bom",
-    # "blr",
-    # "itm"
- ]
+regions = {
+    "ewr" = "vc2-1c-1gb"
+    "ord" = "vc2-1c-1gb"
+    "dfw" = "vc2-1c-1gb"
+    "sea" = "vc2-1c-1gb"
+    "lax" = "vc2-1c-1gb"
+    "atl" = "vc2-1c-1gb"
+    "ams" = "vc2-1c-1gb"
+    "lhr" = "vc2-1c-1gb"
+    "fra" = "vc2-1c-1gb"
+    "sjc" = "vc2-1c-1gb"
+    "syd" = "vc2-1c-1gb"
+    "yto" = "vc2-1c-1gb"
+    "cdg" = "vc2-1c-1gb"
+    "nrt" = "vc2-1c-1gb"
+    "waw" = "vc2-1c-1gb"
+    "mad" = "vc2-1c-1gb"
+    "icn" = "vc2-1c-1gb"
+    "mia" = "vc2-1c-1gb"
+    "sgp" = "vc2-1c-1gb"
+    "sto" = "vc2-1c-1gb"
+    "mex" = "vc2-1c-1gb"
+    "mel" = "vc2-1c-1gb"
+    "bom" = "vc2-1c-1gb"
+    "blr" = "vc2-1c-1gb"
+    "itm" = "vc2-1c-1gb"
+    "jnb" = "vhp-1c-1gb-amd"
+    "scl" = "vhp-1c-1gb-amd"
+}

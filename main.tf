@@ -46,7 +46,7 @@ resource "digitalocean_record" "anycast_ns" {
 }
 
 resource "digitalocean_record" "instance_aaaa" {
-  for_each = toset(var.regions)
+  for_each = tomap(var.regions)
   name = each.key
   domain = var.parent_fqdn
   type = "AAAA"
@@ -65,9 +65,9 @@ data "template_file" "setup-instance" {
 }
 
 resource "vultr_instance" "instance" {
-  for_each = toset(var.regions)
+  for_each = tomap(var.regions)
   region = "${each.key}"
-  plan = "vc2-1c-1gb"
+  plan = "${each.value}"
   os_id = 1743 // Ubuntu 22.04
   enable_ipv6 = true
   hostname = "${each.key}.ron.nlnetlabs.net"

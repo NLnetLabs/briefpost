@@ -30,7 +30,15 @@ provider "digitalocean" {
 }
 
 resource "digitalocean_record" "anycast_aaaa" {
-  name = "@"
+  name = "test"
+  domain = var.parent_fqdn
+  type = "NS"
+  ttl = 60
+  value = "test-ns.${var.parent_fqdn}."
+}
+
+resource "digitalocean_record" "anycast_ns" {
+  name = "test-ns"
   domain = var.parent_fqdn
   type = "AAAA"
   ttl = 60
@@ -52,6 +60,7 @@ data "template_file" "setup-instance" {
   vars = {
     anycast_ip = var.anycast_ip
     anycast_prefix = var.anycast_prefix
+    parent_fqdn = var.parent_fqdn
   }
 }
 

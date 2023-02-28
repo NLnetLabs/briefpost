@@ -11,6 +11,7 @@ ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 
 anycast_ip = '${anycast_ip}'
 anycast_prefix = '${anycast_prefix}'
+parent_fqdn = '${parent_fqdn}'
 
 netplan_config = """
 network:
@@ -36,6 +37,49 @@ netplan_config = netplan_config.replace("$ipv6$", ipv6_address)
 open("/etc/netplan/99-ron.yaml", "w").write(netplan_config)
 
 os.system("netplan apply")
+
+os.system("apt-get install -y nsd")
+
+nsd_config = """
+server:
+    ip-address: $anycast_ip_absolute$
+
+zone:
+    name: test.$parent_fqdn$
+    zonefile: /etc/nsd/test.$parent_fqdn$.zone
+"""
+nsd_config = nsd_config.replace("$anycast_ip_absolute$", anycast_ip.split("/")[0])
+nsd_config = nsd_config.replace("$parent_fqdn$", parent_fqdn)
+open("/etc/nsd/nsd.conf.d/99-ron.conf", "w").write(nsd_config)
+
+nsd_zone = """
+$TTL 60                                         ; 1 hour default TTL
+test.$parent_fqdn$.    IN      SOA      test.$parent_fqdn$. admin.$parent_fqdn$. (
+                                2023022816      ; Serial
+                                10800           ; Refresh
+                                3600            ; Retry
+                                60              ; Expire
+                                60              ; Negative Response TTL
+                        )
+
+; NS records
+                IN      NS      test.$parent_fqdn$.
+                IN      NS      test.$parent_fqdn$.
+
+; AAAA records
+                IN      AAAA    $anycast_ip_absolute$
+
+; TXT records
+                IN      TXT     "$hostname$"
+
+"""
+nsd_zone = nsd_zone.replace("$parent_fqdn$", parent_fqdn)
+nsd_zone = nsd_zone.replace("$anycast_ip_absolute$", anycast_ip.split("/")[0])
+nsd_zone = nsd_zone.replace("$hostname$", hostname)
+open("/etc/nsd/test." + parent_fqdn + ".zone", "w").write(nsd_zone)
+
+# TODO: NSD boots up too quickly and fails... Retry later?
+os.system("systemctl restart nsd")
 
 # TODO: Set up NSD, ensure it listens, then continue setting up BIRD
 

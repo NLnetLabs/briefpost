@@ -14,6 +14,8 @@ terraform {
 variable "vultr_api_key" {}
 variable "do_api_key" {}
 variable "parent_fqdn" {}
+variable "anycast_ip" {}
+variable "anycast_prefix" {}
 
 variable "regions" {}
 
@@ -27,26 +29,31 @@ provider "digitalocean" {
   token = var.do_api_key
 }
 
+resource "digitalocean_record" "anycast_aaaa" {
+  name = "@"
+  domain = var.parent_fqdn
+  type = "AAAA"
+  ttl = 60
+  value = split("/", var.anycast_ip)[0]
+}
+
 resource "digitalocean_record" "instance_aaaa" {
   for_each = toset(var.regions)
   name = each.key
   domain = var.parent_fqdn
   type = "AAAA"
-  ttl = 300
+  ttl = 60
   value = vultr_instance.instance[each.key].v6_main_ip
 }
 
-# data "template_file" "setup-instance" {
-#   for_each = toset(var.regions)
+data "template_file" "setup-instance" {
+  template = file("setup-instance.py")
 
-#   template = file("setup-instance.py")
-
-#   vars = {
-#     hostname = vultr_instance.instance[each.key].hostname
-#     ipv4_address = vultr_instance.instance[each.key].main_ip
-#     ipv6_address = vultr_instance.instance[each.key].v6_main_ip
-#   }
-# }
+  vars = {
+    anycast_ip = var.anycast_ip
+    anycast_prefix = var.anycast_prefix
+  }
+}
 
 resource "vultr_instance" "instance" {
   for_each = toset(var.regions)
@@ -57,5 +64,5 @@ resource "vultr_instance" "instance" {
   hostname = "${each.key}.ron.nlnetlabs.net"
   label = "${each.key}.ron.nlnetlabs.net"
   tags = ["ron"]
-  user_data = file("setup-instance.py")
+  user_data = data.template_file.setup-instance.rendered
 }

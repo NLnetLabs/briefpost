@@ -1,6 +1,8 @@
 vultr_api_key = ""
 do_api_key = ""
 parent_fqdn = "ron.nlnetlabs.net"
+anycast_ip = "2001:ddb::1/48"
+anycast_prefix = "2001:ddb::/48"
 
 regions = [
     # "ewr",
@@ -16,7 +18,7 @@ regions = [
     # "syd",
     # "yto",
     # "cdg",
-    # "nrt",
+    "nrt",
     # "waw",
     # "mad",
     # "icn",

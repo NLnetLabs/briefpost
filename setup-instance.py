@@ -9,6 +9,9 @@ hostname = socket.gethostname()
 ipv4_address = os.popen("curl -4 icanhazip.com").read().strip()
 ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 
+anycast_ip = '${anycast_ip}'
+anycast_prefix = '${anycast_prefix}'
+
 netplan_config = """
 network:
     version: 2
@@ -19,12 +22,14 @@ network:
             dhcp6: true
             set-name: enp1s0
             addresses:
-              - "2001:ddb::1/48":
+              - "$anycast_ip$":
                   lifetime: 0
 """
 # The lifetime trick above makes it so that normal traffic (apt, curl) 
 # will use the default non-anycast address by default
 
+netplan_config = netplan_config.replace("$anycast_ip$", anycast_ip)
+netplan_config = netplan_config.replace("$anycast_prefix$", anycast_prefix)
 netplan_config = netplan_config.replace("$ipv4$", ipv4_address)
 netplan_config = netplan_config.replace("$ipv6$", ipv6_address)
 
@@ -34,7 +39,7 @@ os.system("netplan apply")
 
 # TODO: Set up NSD, ensure it listens, then continue setting up BIRD
 
-os.system("apt install -y bird")
+os.system("apt-get install -y bird")
 
 # TODO: Do the same below for BIRD IPv4
 
@@ -42,20 +47,13 @@ bird6_config = """
 router id $ipv4$;
 
 protocol static {
-	route 2001:ddb::/48 blackhole;
+	route $anycast_prefix$ blackhole;
 }
 
 filter bgp_out {
-    if net = 2001:ddb::/48 then {
+    if net = $anycast_prefix$ then {
         accept;
     }
-    # if net = 2a04:b905::/33 then {
-    #     bgp_community.add((20473,6000));
-    #     accept;
-    # }
-    # if net = 2001:ddb::/48 then {
-    #     accept;
-    # }
     reject;
 }
 
@@ -71,6 +69,8 @@ protocol bgp vultr
 	password "Ahxaen5EeTheetiuphu8";
 }
 """
+bird6_config = bird6_config.replace("$anycast_ip$", anycast_ip)
+bird6_config = bird6_config.replace("$anycast_prefix$", anycast_prefix)
 bird6_config = bird6_config.replace("$ipv4$", ipv4_address)
 bird6_config = bird6_config.replace("$ipv6$", ipv6_address)
 

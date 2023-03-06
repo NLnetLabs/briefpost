@@ -16,6 +16,10 @@ variable "do_api_key" {}
 variable "parent_fqdn" {}
 variable "anycast_ip" {}
 variable "anycast_prefix" {}
+variable "anycast6_ip" {}
+variable "anycast6_prefix" {}
+variable "ssh_private_key" {}
+variable "ssh_public_key" {}
 
 variable "regions" {}
 
@@ -37,12 +41,12 @@ resource "digitalocean_record" "anycast_aaaa" {
   value = "test-ns.${var.parent_fqdn}."
 }
 
-resource "digitalocean_record" "anycast_ns" {
+resource "digitalocean_record" "anycast6_ns" {
   name = "test-ns"
   domain = var.parent_fqdn
   type = "AAAA"
   ttl = 60
-  value = split("/", var.anycast_ip)[0]
+  value = split("/", var.anycast6_ip)[0]
 }
 
 resource "digitalocean_record" "instance_aaaa" {
@@ -60,7 +64,11 @@ data "template_file" "setup-instance" {
   vars = {
     anycast_ip = var.anycast_ip
     anycast_prefix = var.anycast_prefix
+    anycast6_ip = var.anycast6_ip
+    anycast6_prefix = var.anycast6_prefix
     parent_fqdn = var.parent_fqdn
+    ssh_private_key = var.ssh_private_key
+    ssh_public_key = var.ssh_public_key
   }
 }
 
@@ -70,8 +78,8 @@ resource "vultr_instance" "instance" {
   plan = "${each.value}"
   os_id = 1743 // Ubuntu 22.04
   enable_ipv6 = true
-  hostname = "${each.key}.ron.nlnetlabs.net"
-  label = "${each.key}.ron.nlnetlabs.net"
-  tags = ["ron"]
+  hostname = "${each.key}.${var.parent_fqdn}"
+  label = "${each.key}.${var.parent_fqdn}"
+  tags = ["briefpost"]
   user_data = data.template_file.setup-instance.rendered
 }

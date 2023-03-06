@@ -1,9 +1,16 @@
 vultr_api_key = ""
 do_api_key = ""
-parent_fqdn = "ron.nlnetlabs.net"
+parent_fqdn = "briefpost.nlnetlabs.net"
 anycast_ip = "2001:ddb::1/48"
 anycast_prefix = "2001:ddb::/48"
+anycast6_ip = "2001:ddb::1/48"
+anycast6_prefix = "2001:ddb::/48"
 
+authorized_keys = ""
+# MAKE SURE TO END WITH A NEWLINE!
+ssh_private_key = ""
+ssh_public_key = ""
+ 
 regions = {
     "ewr" = "vc2-1c-1gb"
     "ord" = "vc2-1c-1gb"

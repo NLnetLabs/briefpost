@@ -13,10 +13,14 @@ ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 anycast6_ip = '${anycast6_ip}'
 anycast6_prefix = '${anycast6_prefix}'
 anycast6_ip_absolute = anycast6_ip.split("/")[0]
+anycast6_valid_ip = '${anycast6_valid_ip}'
+anycast6_valid_ip_absolute = anycast6_valid_ip.split("/")[0]
 
 anycast_ip = '${anycast_ip}'
 anycast_prefix = '${anycast_prefix}'
 anycast_ip_absolute = anycast_ip.split("/")[0]
+anycast_valid_ip = '${anycast_valid_ip}'
+anycast_valid_ip_absolute = anycast_valid_ip.split("/")[0]
 
 parent_fqdn = '${parent_fqdn}'
 
@@ -36,12 +40,18 @@ network:
                   lifetime: 0
               - "$anycast_ip$":
                   lifetime: 0
+              - "$anycast6_valid_ip$":
+                  lifetime: 0
+              - "$anycast_valid_ip$":
+                  lifetime: 0
 """
 # The lifetime trick above makes it so that normal traffic (apt, curl) 
 # will use the default non-anycast address by default
 
 netplan_config = netplan_config.replace("$anycast6_ip$", anycast6_ip)
 netplan_config = netplan_config.replace("$anycast_ip$", anycast_ip)
+netplan_config = netplan_config.replace("$anycast6_valid_ip$", anycast6_valid_ip)
+netplan_config = netplan_config.replace("$anycast_valid_ip$", anycast_valid_ip)
 
 open("/etc/netplan/99-briefpost.yaml", "w").write(netplan_config)
 
@@ -75,6 +85,8 @@ nginx_config = """
 server {
     listen $anycast_ip_absolute$:443 ssl;
     listen [$anycast6_ip_absolute$]:443 ssl;
+    listen $anycast_Valid_ip_absolute$:443 ssl;
+    listen [$anycast6_valid_ip_absolute$]:443 ssl;
     server_name rpkitest.nlnetlabs.nl;
     error_log  /var/log/nginx.error.log  warn;
     access_log /var/log/nginx.log;
@@ -95,6 +107,8 @@ server {
 """
 nginx_config = nginx_config.replace("$anycast_ip_absolute$", anycast_ip_absolute)
 nginx_config = nginx_config.replace("$anycast6_ip_absolute$", anycast6_ip_absolute)
+nginx_config = nginx_config.replace("$anycast_valid_ip_absolute$", anycast_valid_ip_absolute)
+nginx_config = nginx_config.replace("$anycast6_valid_ip_absolute$", anycast6_valid_ip_absolute)
 nginx_config = nginx_config.replace("$hostname$", hostname)
 
 open("/etc/nginx/sites-enabled/default", "w").write(nginx_config)
@@ -107,6 +121,8 @@ nsd_config = """
 server:
     ip-address: $anycast6_ip_absolute$
     ip-address: $anycast_ip_absolute$
+    ip-address: $anycast6_valid_ip_absolute$
+    ip-address: $anycast_valid_ip_absolute$
 
 zone:
     name: test.$parent_fqdn$
@@ -126,6 +142,8 @@ zone:
 """
 nsd_config = nsd_config.replace("$anycast_ip_absolute$", anycast_ip_absolute)
 nsd_config = nsd_config.replace("$anycast6_ip_absolute$", anycast6_ip_absolute)
+nsd_config = nsd_config.replace("$anycast_valid_ip_absolute$", anycast_valid_ip_absolute)
+nsd_config = nsd_config.replace("$anycast6_valid_ip_absolute$", anycast6_valid_ip_absolute)
 nsd_config = nsd_config.replace("$parent_fqdn$", parent_fqdn)
 open("/etc/nsd/nsd.conf.d/99-briefpost.conf", "w").write(nsd_config)
 

@@ -67,7 +67,6 @@ data "template_file" "setup-instance" {
     anycast6_prefix = var.anycast6_prefix
     parent_fqdn = var.parent_fqdn
     ssh_private_key = var.ssh_private_key
-    ssh_public_key = var.ssh_public_key
   }
 }
 

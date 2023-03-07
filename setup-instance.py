@@ -21,7 +21,6 @@ anycast_ip_absolute = anycast_ip.split("/")[0]
 parent_fqdn = '${parent_fqdn}'
 
 ssh_private_key = """${ssh_private_key}"""
-ssh_public_key = '${ssh_public_key}'
 
 netplan_config = """
 network:
@@ -56,9 +55,17 @@ os.system("ufw disable")
 open("/tmp/ssh-key", "w").write(ssh_private_key)
 os.system("chmod 0600 /tmp/ssh-key")
 
-os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/root/rpkitest.nlnetlabs.nl\" /root")
+while True:
+    os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/root/rpkitest.nlnetlabs.nl\" /root")
+    # This copies it to the folder /etc/nsd, because /etc/nsd does not exist yet.
+    os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/etc/nsd/ldns-signed4invalid\" /etc/nsd")
 
-os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/etc/nsd/ldns-signed4invalid\" /etc/nsd")
+    if os.path.exists("/root/rpkitest.nlnetlabs.nl") and os.path.exists("/etc/nsd"):
+        break
+    else:
+        print("Something went wrong copying files, retrying in 15 seconds...")
+        time.sleep(15)
+
 os.system("mv /etc/nsd/ldns-signed4invalid /etc/nsd/rpkitest.nlnetlabs.nl")
 os.system("cd /etc/nsd/rpkitest.nlnetlabs.nl && make resign")
 

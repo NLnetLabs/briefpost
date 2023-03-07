@@ -19,7 +19,6 @@ variable "anycast_prefix" {}
 variable "anycast6_ip" {}
 variable "anycast6_prefix" {}
 variable "ssh_private_key" {}
-variable "ssh_public_key" {}
 
 variable "regions" {}
 

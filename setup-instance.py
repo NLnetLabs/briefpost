@@ -35,14 +35,14 @@ network:
             addresses:
               - "$anycast6_ip$":
                   lifetime: 0
+              - "$anycast_ip$":
+                  lifetime: 0
 """
 # The lifetime trick above makes it so that normal traffic (apt, curl) 
 # will use the default non-anycast address by default
 
 netplan_config = netplan_config.replace("$anycast6_ip$", anycast6_ip)
-netplan_config = netplan_config.replace("$anycast6_prefix$", anycast6_prefix)
-netplan_config = netplan_config.replace("$ipv4$", ipv4_address)
-netplan_config = netplan_config.replace("$ipv6$", ipv6_address)
+netplan_config = netplan_config.replace("$anycast_ip$", anycast_ip)
 
 open("/etc/netplan/99-briefpost.yaml", "w").write(netplan_config)
 
@@ -64,10 +64,9 @@ os.system("cd /etc/nsd/rpkitest.nlnetlabs.nl && make resign")
 
 os.system("apt-get install -y nginx")
 
-# TODO: Enable IPv4
 nginx_config = """
 server {
-    #listen $anycast_ip_absolute$:443 ssl;
+    listen $anycast_ip_absolute$:443 ssl;
     listen [$anycast6_ip_absolute$]:443 ssl;
     server_name rpkitest.nlnetlabs.nl;
     error_log  /var/log/nginx.error.log  warn;
@@ -100,6 +99,7 @@ os.system("apt-get install -y nsd")
 nsd_config = """
 server:
     ip-address: $anycast6_ip_absolute$
+    ip-address: $anycast_ip_absolute$
 
 zone:
     name: test.$parent_fqdn$
@@ -117,6 +117,7 @@ zone:
     name: rpkitest6.nlnetlabs.nl
     zonefile: /etc/nsd/rpkitest6.nlnetlabs.nl.signed
 """
+nsd_config = nsd_config.replace("$anycast_ip_absolute$", anycast_ip_absolute)
 nsd_config = nsd_config.replace("$anycast6_ip_absolute$", anycast6_ip_absolute)
 nsd_config = nsd_config.replace("$parent_fqdn$", parent_fqdn)
 open("/etc/nsd/nsd.conf.d/99-briefpost.conf", "w").write(nsd_config)
@@ -193,6 +194,39 @@ bird6_config = bird6_config.replace("$ipv4$", ipv4_address)
 bird6_config = bird6_config.replace("$ipv6$", ipv6_address)
 
 open("/etc/bird/bird6.conf", "w").write(bird6_config)
+
+bird_config = """
+router id $ipv4$;
+
+protocol static {
+	route $anycast_prefix$ blackhole;
+}
+
+filter bgp_out {
+    if net = $anycast_prefix$ then {
+        accept;
+    }
+    reject;
+}
+
+protocol bgp vultr
+{
+	local as 211321;
+	source address $ipv4$;
+	import all;
+	export filter bgp_out;
+	graceful restart on;
+	multihop 2;
+	neighbor 169.254.169.254 as 64515;
+	password "Ahxaen5EeTheetiuphu8";
+}
+"""
+bird_config = bird_config.replace("$anycast_ip$", anycast_ip)
+bird_config = bird_config.replace("$anycast_prefix$", anycast_prefix)
+bird_config = bird_config.replace("$ipv4$", ipv4_address)
+
+open("/etc/bird/bird.conf", "w").write(bird_config)
+
 
 os.system("systemctl restart bird")
 os.system("systemctl restart bird6")

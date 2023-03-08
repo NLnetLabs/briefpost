@@ -85,7 +85,7 @@ nginx_config = """
 server {
     listen $anycast_ip_absolute$:443 ssl;
     listen [$anycast6_ip_absolute$]:443 ssl;
-    listen $anycast_Valid_ip_absolute$:443 ssl;
+    listen $anycast_valid_ip_absolute$:443 ssl;
     listen [$anycast6_valid_ip_absolute$]:443 ssl;
     server_name rpkitest.nlnetlabs.nl;
     error_log  /var/log/nginx.error.log  warn;

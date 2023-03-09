@@ -68,7 +68,7 @@ os.system("chmod 0600 /tmp/ssh-key")
 while True:
     os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/root/rpkitest.nlnetlabs.nl\" /root")
     # This copies it to the folder /etc/nsd, because /etc/nsd does not exist yet.
-    os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/etc/nsd/ldns-signed4invalid\" /etc/nsd")
+    os.system("scp -o \"StrictHostKeyChecking no\" -i /tmp/ssh-key -pr \"root@manson.nlnetlabs.nl:/etc/nsd/ldns-signed4valid\" /etc/nsd")
 
     if os.path.exists("/root/rpkitest.nlnetlabs.nl") and os.path.exists("/etc/nsd"):
         break
@@ -76,8 +76,7 @@ while True:
         print("Something went wrong copying files, retrying in 15 seconds...")
         time.sleep(15)
 
-os.system("mv /etc/nsd/ldns-signed4invalid /etc/nsd/rpkitest.nlnetlabs.nl")
-os.system("cd /etc/nsd/rpkitest.nlnetlabs.nl && make resign")
+os.system("cd /etc/nsd && make resign")
 
 os.system("apt-get install -y nginx")
 
@@ -123,6 +122,7 @@ server:
     ip-address: $anycast_ip_absolute$
     ip-address: $anycast6_valid_ip_absolute$
     ip-address: $anycast_valid_ip_absolute$
+    nsid: ascii_$hostname$
 
 zone:
     name: test.$parent_fqdn$
@@ -166,6 +166,7 @@ test.$parent_fqdn$.    IN      SOA      test.$parent_fqdn$. admin.$parent_fqdn$.
 
 ; TXT records
                 IN      TXT     "$hostname$"
+*               IN      TXT     "$hostname$"
 
 """
 nsd_zone = nsd_zone.replace("$parent_fqdn$", parent_fqdn)
@@ -184,8 +185,6 @@ while True:
 
 
 os.system("apt-get install -y bird")
-
-# TODO: Do the same below for BIRD IPv4
 
 bird6_config = """
 router id $ipv4$;

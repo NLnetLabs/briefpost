@@ -13,12 +13,14 @@ ipv6_address = os.popen("curl -6 icanhazip.com").read().strip()
 anycast6_ip = '${anycast6_ip}'
 anycast6_prefix = '${anycast6_prefix}'
 anycast6_ip_absolute = anycast6_ip.split("/")[0]
+invalid6_more_specific_prefix = '${invalid6_more_specific_prefix}'
 anycast6_valid_ip = '${anycast6_valid_ip}'
 anycast6_valid_ip_absolute = anycast6_valid_ip.split("/")[0]
 
 anycast_ip = '${anycast_ip}'
 anycast_prefix = '${anycast_prefix}'
 anycast_ip_absolute = anycast_ip.split("/")[0]
+invalid_more_specific_prefix = '${invalid_more_specific_prefix}'
 anycast_valid_ip = '${anycast_valid_ip}'
 anycast_valid_ip_absolute = anycast_valid_ip.split("/")[0]
 
@@ -77,6 +79,7 @@ while True:
         time.sleep(15)
 
 os.system("cd /etc/nsd && make resign")
+os.system('(crontab -l && echo "31 6 * * *    (cd /etc/nsd; /usr/bin/make resign && /usr/sbin/nsd-control reload)") | crontab -')
 
 os.system("apt-get install -y nginx")
 
@@ -191,10 +194,18 @@ router id $ipv4$;
 
 protocol static {
 	route $anycast6_prefix$ blackhole;
+	route $invalid6_more_specific_prefix$ blackhole;
 }
 
+# Keep the also invalidly announced more specific within vultr to prevent
+# redirection of routes to the invalid announcement at the last HOP from
+# non validating vultr pops.
+# Do not export out of AS20473 has community 20473:6000, see:
+# https://github.com/vultr/vultr-docs/tree/main/faq/as20473-bgp-customer-guide#action-communities
 filter bgp_out {
-    if net = $anycast6_prefix$ then {
+    if net = $anycast6_prefix$ then accept;
+    if net = $invalid6_more_specific_prefix$ then {
+        bgp_community.add((20473,6000));
         accept;
     }
     reject;
@@ -214,6 +225,7 @@ protocol bgp vultr
 """
 bird6_config = bird6_config.replace("$anycast6_ip$", anycast6_ip)
 bird6_config = bird6_config.replace("$anycast6_prefix$", anycast6_prefix)
+bird6_config = bird6_config.replace("$invalid6_more_specific_prefix$", invalid6_more_specific_prefix)
 bird6_config = bird6_config.replace("$ipv4$", ipv4_address)
 bird6_config = bird6_config.replace("$ipv6$", ipv6_address)
 
@@ -224,10 +236,18 @@ router id $ipv4$;
 
 protocol static {
 	route $anycast_prefix$ blackhole;
+	route $invalid_more_specific_prefix$ blackhole;
 }
 
+# Keep the also invalidly announced more specific within vultr to prevent
+# redirection of routes to the invalid announcement at the last HOP from
+# non validating vultr pops.
+# Do not export out of AS20473 has community 20473:6000, see:
+# https://github.com/vultr/vultr-docs/tree/main/faq/as20473-bgp-customer-guide#action-communities
 filter bgp_out {
-    if net = $anycast_prefix$ then {
+    if net = $anycast_prefix$ then accept;
+    if net = $invalid_more_specific_prefix$ then {
+        bgp_community.add((20473,6000));
         accept;
     }
     reject;
@@ -247,6 +267,7 @@ protocol bgp vultr
 """
 bird_config = bird_config.replace("$anycast_ip$", anycast_ip)
 bird_config = bird_config.replace("$anycast_prefix$", anycast_prefix)
+bird_config = bird_config.replace("$invalid_more_specific_prefix$", invalid_more_specific_prefix)
 bird_config = bird_config.replace("$ipv4$", ipv4_address)
 
 open("/etc/bird/bird.conf", "w").write(bird_config)

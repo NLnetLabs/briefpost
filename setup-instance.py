@@ -148,6 +148,7 @@ nsd_config = nsd_config.replace("$anycast6_ip_absolute$", anycast6_ip_absolute)
 nsd_config = nsd_config.replace("$anycast_valid_ip_absolute$", anycast_valid_ip_absolute)
 nsd_config = nsd_config.replace("$anycast6_valid_ip_absolute$", anycast6_valid_ip_absolute)
 nsd_config = nsd_config.replace("$parent_fqdn$", parent_fqdn)
+nsd_config = nsd_config.replace("$hostname$", hostname)
 open("/etc/nsd/nsd.conf.d/99-briefpost.conf", "w").write(nsd_config)
 
 nsd_zone = """

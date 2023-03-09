@@ -20,6 +20,8 @@ variable "anycast6_ip" {}
 variable "anycast6_prefix" {}
 variable "anycast_valid_ip" {}
 variable "anycast6_valid_ip" {}
+variable "invalid_more_specific_prefix" {}
+variable "invalid6_more_specific_prefix" {}
 variable "ssh_private_key" {}
 
 variable "regions" {}
@@ -71,6 +73,8 @@ data "template_file" "setup-instance" {
     ssh_private_key = var.ssh_private_key
     anycast_valid_ip = var.anycast_valid_ip
     anycast6_valid_ip = var.anycast6_valid_ip
+    invalid_more_specific_prefix = var.invalid_more_specific_prefix
+    invalid6_more_specific_prefix = var.invalid6_more_specific_prefix
   }
 }
 
